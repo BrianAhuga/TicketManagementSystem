@@ -1,6 +1,8 @@
 using ClientUI.Components;
 using Domain.Entities;
+using Domain.Interfaces;
 using Infrastructure.Data;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,17 +12,28 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAuthentication().AddCookie(IdentityConstants.ApplicationScheme);
+
+
+builder.Services.AddIdentityCore<User>()
+    .AddEntityFrameworkStores<AppDBContext>()
+    .AddSignInManager();
+
+builder.Services.ConfigureApplicationCookie(opt =>
+{
+    opt.LoginPath = "/login";
+    opt.AccessDeniedPath = "/accessdenied";
+});
 
 builder.Services.AddDbContext<AppDBContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-builder.Services.AddAuthentication().AddCookie(IdentityConstants.ApplicationScheme);
+builder.Services.AddScoped<IAccountService, AccountService>();
 
-builder.Services.AddIdentityCore<User>()
-    .AddEntityFrameworkStores<AppDBContext>()
-    .AddSignInManager();
 
 var app = builder.Build();
 

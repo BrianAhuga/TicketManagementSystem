@@ -3,6 +3,7 @@ using Domain.DTO.Request;
 using Domain.DTO.Response;
 using Domain.Entities;
 using Domain.Interfaces;
+using Infrastructure.Common;
 using Microsoft.AspNetCore.Identity;
 
 namespace Infrastructure.Services
@@ -17,9 +18,24 @@ namespace Infrastructure.Services
         }
 
 
-        public Task<BaseResponse> RegisterUser(RegisterUserRequest request)
+        public async Task<BaseResponse> RegisterUser(RegisterUserRequest request)
         {
-            throw new NotImplementedException();
+            User user = new User
+            {
+                UserName = request.Email,
+                Email = request.Email,
+                AccountConfirmed = false
+            };
+
+            string password = Constants.DEFAULT_PASSWORD;
+
+            var result = await signInManager.UserManager.CreateAsync(user, password);
+
+            return new BaseResponse
+            {
+                isSuccess = result.Succeeded,
+                ErrorMessage = result.Succeeded ? string.Empty : string.Join(", ", result.Errors.Select(e => e.Description))
+            };
         }
 
         public async Task<BaseResponse<string>> VerifyUser(string email, string password)
@@ -46,7 +62,7 @@ namespace Infrastructure.Services
             {
                 response.Value = user.UserName;
             }
-            
+
             return response;
         }
     }
