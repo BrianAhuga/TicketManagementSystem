@@ -1,5 +1,13 @@
 ﻿@page "/login"
+
 @using System.ComponentModel.DataAnnotations
+@using Domain.Entities
+@using Domain.Interfaces
+@using Microsoft.AspNetCore.Identity
+
+@inject IAccountService accountService;
+@inject SignInManager<User> signInManager;
+@inject NavigationManager nav;
 
 <h3>Login</h3>
 
@@ -39,20 +47,22 @@
 
 
 
-
-
-
-
-
-
-
 @code {
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
     private async Task OnLogin()
     {
+        var verify = await accountService.VerifyUser(Input.Email, Input.Password);
+        if (!verify.isSuccess)
+        {
+            //Alert
+            return;
+        }
 
+        await signInManager.PasswordSignInAsync(verify.Value, Input.Password,
+            Input.Remember, false);
+        nav.NavigateTo("/");
     }
 
     private sealed class InputModel
