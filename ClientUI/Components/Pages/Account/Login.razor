@@ -8,8 +8,9 @@
 
 
 @inject IAccountService accountService;
-@inject SignInManager<User> signInManager;
 @inject NavigationManager nav;
+
+ @rendermode InteractiveServer
 
 <style>
     .divider:after,
@@ -45,8 +46,8 @@
                     <p class="lead fw-normal mb-0 me-3">Sign In with Email</p>
                 </div>
 
-                
-                <MudAlert Severity="Severity.Success" Variant="Variant.Filled">The reactor is running at optimum temperature</MudAlert>
+
+                <Alert @ref="alert" />
 
                 <EditForm Model="Input" method="post" OnValidSubmit="OnLogin" FormName="Login">
                     <DataAnnotationsValidator />
@@ -83,6 +84,8 @@
    
 
 @code {
+    private Alert alert;
+
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
@@ -92,12 +95,11 @@
         if (!verify.isSuccess)
         {
             //Alert
+            alert.ShowFailed(verify.ErrorMessage);
+
             return;
         }
-
-        await signInManager.PasswordSignInAsync(verify.Value, Input.Password,
-            Input.Remember, false);
-        nav.NavigateTo("/");
+        nav.NavigateTo($"/processor/{verify.Value}/{Input.Password}/{Input.Remember}");
     }
 
     private sealed class InputModel

@@ -1,0 +1,39 @@
+﻿@if (showLeaveAlert)
+{
+    <MudAlert Severity="severity"
+              Variant="Variant.Filled"
+              ShowCloseIcon="true" CloseIconClicked="(() => CloseMe())">
+        @Message
+    </MudAlert>
+}
+
+
+@code {
+    [Parameter] public string Message { get; set; }
+
+    private bool showLeaveAlert = false;
+    private Severity severity { get; set; }
+
+    private void CloseMe()
+    {
+        showLeaveAlert = false;
+    }
+
+    public void ShowAlerts(string message)
+    {
+        Message = message;
+        severity = Severity.Success;
+
+        showLeaveAlert = true;
+        StateHasChanged();
+    }
+
+    public void ShowFailed(string message)
+    {
+        Message = message;
+        severity = Severity.Error;
+
+        showLeaveAlert = true;
+        StateHasChanged();
+    }
+}
