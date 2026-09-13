@@ -6,7 +6,7 @@
         public int[]? ProductId { get; set; }
         public int[]? CategoryId { get; set; }
         public int[]? PriorityId { get; set; }
-        public int[]? Status { get; set; }
-        public int[]? RaisedBy { get; set; }
+        public string[]? Status { get; set; }
+        public string[]? RaisedBy { get; set; }
     }
 }

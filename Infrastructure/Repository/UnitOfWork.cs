@@ -8,10 +8,13 @@ namespace Infrastructure.Repository
     {
         private readonly IdentityDbContext context;
         private Hashtable repositories;
+        public ITicketRepository TicketRepository { get; }
 
-        public UnitOfWork(IdentityDbContext context)
+        public UnitOfWork(IdentityDbContext context,
+            ITicketRepository ticketRepository)
         {
             this.context = context;
+            TicketRepository = ticketRepository;
         }
 
         public async Task<int> SaveChanges()

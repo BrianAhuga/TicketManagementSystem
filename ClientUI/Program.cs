@@ -2,7 +2,9 @@ using ClientUI.Components;
 using ClientUI.Security;
 using Domain.Entities;
 using Domain.Interfaces;
+using Domain.Repository;
 using Infrastructure.Data;
+using Infrastructure.Repository;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +38,11 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ICriteriaService, CriteriaService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+
 builder.Services.AddScoped(typeof(EncryptionHelper<>));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 
 builder.Services.AddMudServices();
 
