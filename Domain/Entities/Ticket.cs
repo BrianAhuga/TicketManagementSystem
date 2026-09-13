@@ -20,7 +20,7 @@ namespace Domain.Entities
         public DateTime RaisedDate { get; set; }
         public DateTime ExpectedDate { get; set; }
 
-        public string AssignedToId { get; set; }
+        public string? AssignedToId { get; set; }
         [ForeignKey(nameof(AssignedToId))]
         public User? AssignedTo { get; set; }
 
