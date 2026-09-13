@@ -1,4 +1,5 @@
 using ClientUI.Components;
+using ClientUI.Security;
 using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Data;
@@ -34,6 +35,7 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 });
 
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped(typeof(EncryptionHelper<>));
 
 builder.Services.AddMudServices();
 
