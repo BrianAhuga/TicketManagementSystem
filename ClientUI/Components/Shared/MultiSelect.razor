@@ -20,7 +20,7 @@
     @code {
     [Parameter] public string label { get; set; }
     [Parameter] public List<SelectItem> elements { get; set; }
-    private IEnumerable<string> options { get; set; } = new HashSet<string>() { };
+    public IEnumerable<string> options { get; set; } = new HashSet<string>() { };
     private MudSelect<string> ddl;
 
     private string GetMultiSelectionText(List<string> selectedValues)

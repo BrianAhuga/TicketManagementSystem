@@ -1,4 +1,5 @@
 ﻿@page "/ticket"
+@using Domain.DTO.Request
 
 
 <SectionContent SectionName="page-title">Ticket Management</SectionContent>
@@ -7,6 +8,7 @@
 
 @inject ITicketService ticketService
 @inject ICriteriaService criteriaService
+@inject IAccountService accountService
 
 <MudPopoverProvider />
 
@@ -31,6 +33,7 @@
     }
 
     .mud-grid-item {
+        padding-top: .3rem !important;
         padding-bottom: .3rem;
     }
 </style>
@@ -107,7 +110,7 @@
     MultiSelect statusDDL;
     MultiSelect raisedbyDDL;
 
-    public int Summary { get; set; }
+    public string Summary { get; set; }
 
     private List<SelectItem> products;
     private List<SelectItem> priorities;
@@ -146,16 +149,27 @@
             Value = x,
             Text = x
         }).ToList();
+
+        raisedby = accountService.GetUsers().Select(x => new SelectItem
+        {
+            Value = x.Id,
+            Text = x.Email
+        }).ToList();
     }
 
-    /// <summary>
-    /// Here we simulate getting the paged, filtered and ordered data from the server
-    /// </summary>
     private async Task<GridData<GetTicketResponse>> ServerReload(GridState<GetTicketResponse> state)
     {
         IEnumerable<GetTicketResponse> getTickets = ticketService.GetTickets
         (
-          new Domain.DTO.Request.GetTicketRequest()
+          new GetTicketRequest()
+          {
+              Summary = Summary,
+              ProductId = productDDL.options.Select(x => int.Parse(x)).ToArray(),
+              CategoryId = categoryDDL.options.Select(x => int.Parse(x)).ToArray(),
+              PriorityId = priorityDDL.options.Select(x => int.Parse(x)).ToArray(),
+              Status = statusDDL.options.ToArray(),
+              RaisedBy = raisedbyDDL.options.ToArray()
+          }
         );
 
         await Task.Delay(300);
@@ -170,9 +184,16 @@
         };
     }
 
-    private Task OnSearch(string text)
+    private Task Reset()
     {
-        searchString = text;
+        productDDL.Clear();
+        categoryDDL.Clear();
+        priorityDDL.Clear();
+        statusDDL.Clear();
+        raisedbyDDL.Clear();
+        Summary = string.Empty;
+
         return dataGrid.ReloadServerData();
     }
+
 }
