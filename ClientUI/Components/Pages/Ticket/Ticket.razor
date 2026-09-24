@@ -9,6 +9,7 @@
 @inject ITicketService ticketService
 @inject ICriteriaService criteriaService
 @inject IAccountService accountService
+@inject NavigationManager nav
 
 <MudPopoverProvider />
 
@@ -84,7 +85,10 @@
 <MudDataGrid @ref="dataGrid"
              T="GetTicketResponse"
              SortMode="@SortMode.None"
-             ServerData="ServerReload">
+             ServerData="ServerReload"
+             Hover="true"
+             RowClick="RowClicked">
+
     <Columns>
         <PropertyColumn Property="x => x.TicketIdView" Title="Ticket Id" />
         <PropertyColumn Property="x => x.Summary" />
@@ -182,6 +186,11 @@
             TotalItems = totalItems,
             Items = pagedData
         };
+    }
+
+    private void RowClicked(DataGridRowClickEventArgs<GetTicketResponse> args)
+    {
+        nav.NavigateTo($"/ticket/details/{args.Item.TicketId}");
     }
 
     private Task Reset()

@@ -33,7 +33,9 @@ namespace Infrastructure.Services
                 PriorityId = result.PriorityId,
                 CategoryId = result.CategoryId,
                 Status = result.Status,
-                RaisedBy = result.User?.Email,
+                AssignedToId = result.AssignedToId,
+                RaisedBy = result.User?.Id,
+                RaisedByName = result.User?.Email,
                 CreatedDate = result.RaisedDate,
                 ExpectedDate = result.ExpectedDate
             };
