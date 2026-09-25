@@ -33,5 +33,13 @@
         public DateTime CreatedDate { get; set; }
         public string? ClosedBy { get; set; }
         public DateTime? ClosedByDate { get; set; }
+
+        public List<AttachmentResponse> Attachments { get; set; }
     }
+}
+
+public class AttachmentResponse
+{
+    public string FileName { get; set; }
+    public string ServerFileName { get; set; }
 }

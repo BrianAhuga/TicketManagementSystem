@@ -1,5 +1,9 @@
 ﻿@page "/ticket/create"
+@using ClientUI.Extensions.Helpers
+@using Domain.DTO.Request
+@using Microsoft.AspNetCore.Authorization
 @using MudExRichTextEditor
+@attribute [Authorize]
 
 @inject ICriteriaService criteriaService
 @inject IAccountService accountService
@@ -206,6 +210,33 @@
 
     private async Task CreateTicket()
     {
+        CreateTicketRequest request = new CreateTicketRequest
+        {
+            Summary = summary.Text,
+            Description = descriptionEditor.Value,
+            ProductId = productDDL.selectedValue.ToNullableInteger(),
+            CategoryId = categoryDDL.selectedValue.ToNullableInteger(),
+            PriorityId = priorityDDL.selectedValue.ToNullableInteger(),
+            AssignedToId = assignDDL.selectedValue,
+            files = files
+        };
+
+        ValidationHelpers validationHelper = new ValidationHelpers(request);
+        bool isValid = validationHelper.Validate();
+        errors = validationHelper.validationResults.Select(x => x.ErrorMessage).ToArray();
+
+        if (isValid)
+        {
+            var createTicketResult = await ticketService.CreateTicket(request);
+            if (createTicketResult.isSuccess)
+            {
+                nav.NavigateTo("/ticket/details/" + createTicketResult.Value);
+            }
+            else
+            {
+                alert.ShowFailed(createTicketResult.ErrorMessage);
+            }
+        }
 
     }
 }

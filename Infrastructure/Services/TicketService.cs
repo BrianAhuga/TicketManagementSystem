@@ -4,6 +4,7 @@ using Domain.Entities;
 using Domain.Interfaces;
 using Domain.Repository;
 using Infrastructure.Common;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -19,18 +20,108 @@ namespace Infrastructure.Services
     {
         private readonly IUnitOfWork unitOfWork;
         private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly IWebHostEnvironment webHostEnvironment;
 
         public TicketService(IUnitOfWork unitOfWork,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IWebHostEnvironment webHostEnvironment)
         {
             this.unitOfWork = unitOfWork;
             this.httpContextAccessor = httpContextAccessor;
+            this.webHostEnvironment = webHostEnvironment;
+        }
+
+        public async Task<BaseResponse<int>> CreateTicket(CreateTicketRequest request)
+        {
+            var createTicketResult = new BaseResponse<int>() { isSuccess = false };
+            var uploadPath = Path.Combine(webHostEnvironment.WebRootPath,
+                "uploads", "attachments");
+
+            try
+            {
+                var currentUser = httpContextAccessor.HttpContext.User.Claims
+                    .FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value;
+                if (currentUser == null)
+                {
+                    createTicketResult.ErrorMessage = "User is not valid, please re-login";
+                    return createTicketResult;
+                }
+
+                Ticket ticket = new Ticket();
+                ticket.Summary = request.Summary;
+                ticket.Description = request.Description;
+                ticket.ProductId = request.ProductId.Value;
+                ticket.CategoryId = request.CategoryId.Value;
+                ticket.PriorityId = request.PriorityId.Value;
+                ticket.AssignedToId = request.AssignedToId;
+                ticket.RaisedBy = currentUser;
+                ticket.RaisedDate = DateTime.Now;
+                ticket.Status = Constants.STATUS_NEW;
+
+                var priority = unitOfWork.Repository<Priority>().GetByIdAsync(request
+                    .PriorityId.Value);
+                if (priority != null)
+                {
+                    ticket.ExpectedDate = DateTime.Now.AddDays(priority.ExpectedDays);
+                }
+
+                unitOfWork.TicketRepository.Add(ticket);
+
+                if (request.files != null && request.files.Count > 0)
+                {
+                    foreach (var file in request.files)
+                    {
+                        var fileExt = Path.GetExtension(file.Name);
+                        var actualName = Path.GetFileNameWithoutExtension(file.Name);
+
+                        var fileName = $"{actualName}-{Guid.NewGuid().ToString()}{fileExt}";
+                        var filePath = Path.Combine(uploadPath, fileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.OpenReadStream().CopyToAsync(fileStream);
+                        }
+
+                        Attachment attachment = new Attachment
+                        {
+                            Ticket = ticket,
+                            FileName = Path.GetFileName(file.Name),
+                            ServerFileName = fileName,
+                            FileSize = file.Size,
+                            CreatedDate = DateTime.Now
+                        };
+                        unitOfWork.Repository<Attachment>().Add(attachment);
+                    }
+                }
+
+                var result = await unitOfWork.SaveChanges() > 0;
+                if (result)
+                {
+                    createTicketResult.isSuccess = true;
+                    createTicketResult.Value = ticket.TicketId;
+                    return createTicketResult;
+                }
+                else
+                {
+                    createTicketResult.ErrorMessage = "Failed when creating ticket!";
+                    return createTicketResult;
+                }
+            }
+            catch (Exception ex)
+            {
+                createTicketResult.ErrorMessage = "Failed: " + ex.Message;
+                return createTicketResult;
+            }
         }
 
         public GetTicketResponse FindTicket(int ticketId)
         {
             var result = unitOfWork.Repository<Ticket>().GetByIdAsync(ticketId);
             if (result == null) return null;
+
+            var attachments = unitOfWork.Repository<Attachment>().ListAll()
+                .Where(x => x.TicketId == result.TicketId);
+            var attachmentpath = Path.Combine("uploads", "attachments");
 
             return new GetTicketResponse
             {
@@ -47,7 +138,13 @@ namespace Infrastructure.Services
                 CreatedDate = result.RaisedDate,
                 ExpectedDate = result.ExpectedDate,
                 ClosedBy = result.ClosedBy,
-                ClosedByDate = result.ClosedByDate
+                ClosedByDate = result.ClosedByDate,
+
+                Attachments = attachments.Select(x => new AttachmentResponse
+                {
+                    FileName = x.FileName,
+                    ServerFileName = Path.Combine(attachmentpath, x.ServerFileName)
+                }).ToList()
             };
         }
 
