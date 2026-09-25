@@ -9,5 +9,6 @@ namespace Domain.Interfaces
         List<GetTicketResponse> GetTickets(GetTicketRequest request);
         GetTicketResponse FindTicket(int ticketId);
         Task<BaseResponse> UpdateTicket(UpdateTicketRequest request);
+        Task<BaseResponse<int>> CreateTicket(CreateTicketRequest request);
     }
 }
