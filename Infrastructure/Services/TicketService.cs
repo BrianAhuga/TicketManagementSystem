@@ -4,10 +4,12 @@ using Domain.Entities;
 using Domain.Interfaces;
 using Domain.Repository;
 using Infrastructure.Common;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,9 +18,13 @@ namespace Infrastructure.Services
     public class TicketService : ITicketService
     {
         private readonly IUnitOfWork unitOfWork;
-        public TicketService(IUnitOfWork unitOfWork)
+        private readonly IHttpContextAccessor httpContextAccessor;
+
+        public TicketService(IUnitOfWork unitOfWork,
+            IHttpContextAccessor httpContextAccessor)
         {
             this.unitOfWork = unitOfWork;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         public GetTicketResponse FindTicket(int ticketId)
@@ -39,7 +45,9 @@ namespace Infrastructure.Services
                 RaisedBy = result.User?.Id,
                 RaisedByName = result.User?.Email,
                 CreatedDate = result.RaisedDate,
-                ExpectedDate = result.ExpectedDate
+                ExpectedDate = result.ExpectedDate,
+                ClosedBy = result.ClosedBy,
+                ClosedByDate = result.ClosedByDate
             };
         }
 
@@ -83,8 +91,17 @@ namespace Infrastructure.Services
 
             if (request.Status == Constants.STATUS_CLOSED)
             {
-                currentTicket.ClosedDate = DateTime.Now;
-                currentTicket.ClosedBy = "...";
+                currentTicket.ClosedByDate = DateTime.Now;
+
+                var currentUser = httpContextAccessor.HttpContext.User.Claims.
+                    FirstOrDefault(x => x.Type == ClaimTypes.Name).Value;
+                if (currentUser == null)
+                {
+                    result.ErrorMessage = "User is not valid, please re-login";
+                    return result;
+                }
+
+                currentTicket.ClosedBy = currentUser;
             }
 
             unitOfWork.TicketRepository.Update(currentTicket);

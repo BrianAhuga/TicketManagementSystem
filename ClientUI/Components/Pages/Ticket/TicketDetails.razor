@@ -1,5 +1,10 @@
 ﻿@page "/ticket/details/{ticketId:int}"
+@using ClientUI.Extensions.Helpers
+@using Domain.DTO.Request
 @using Infrastructure.Common
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
 @inject ITicketService ticketService
 @inject IAccountService accountService
 @inject ICriteriaService criteriaService
@@ -34,7 +39,7 @@
     <MudButton StartIcon="@Icons.Material.Filled.ArrowBack" @onclick="BackToTicketList" Variant="Variant.Filled" Color="Color.Primary">
         <MudText>Back to list</MudText>
     </MudButton>
-    <MudButton StartIcon="@Icons.Material.Filled.CheckCircle" Variant="Variant.Filled" Color="Color.Error">
+    <MudButton Disabled="isClosed" StartIcon="@Icons.Material.Filled.CheckCircle" @onclick="CloseTicket" Variant="Variant.Filled" Color="Color.Error">
         <MudText>Close</MudText>
     </MudButton>
 </div>
@@ -120,8 +125,11 @@
                     Update Ticket
                 </MudButton>
                 <MudTextField T="string" ReadOnly="true" Text="@Ticket.ExpectedDate.BeautifyDate()" Label="Expected Completion Date" Variant="Variant.Outlined"></MudTextField>
-                @* <MudTextField T="string" ReadOnly="true" Text="@Ticket.ClosedBy" Label="Closed By" Variant="Variant.Outlined"></MudTextField>
-                <MudTextField T="string" ReadOnly="true" Text="@Ticket.ClosedDate.BeautifyDate()" Label="Closed Date" Variant="Variant.Outlined"></MudTextField> *@
+                @if (isClosed)
+                {
+                    <MudTextField T="string" ReadOnly="true" Text="@Ticket.ClosedBy" Label="Closed By" Variant="Variant.Outlined"></MudTextField>
+                    <MudTextField T="string" ReadOnly="true" Text="@Ticket.ClosedByDate.Value.BeautifyDate()" Label="Closed Date" Variant="Variant.Outlined"></MudTextField>
+                }
                 <Select @ref="productDDL" elements="products" label="Product"></Select>
                 <Select @ref="categoryDDL" elements="categories" label="Category"></Select>
                 <Select @ref="assignDDL" elements="users" label="Assign"></Select>
@@ -149,6 +157,7 @@
     private List<SelectItem> status;
     private List<SelectItem> users;
 
+    private bool isClosed = false;
     private Alert alert;
     private string[] errors = { };
 
@@ -178,6 +187,8 @@
             {
                 assignDDL.selectedValue = Ticket.AssignedToId.ToString();
             }
+
+            if (Ticket.Status == Constants.STATUS_CLOSED) isClosed = true;
 
             StateHasChanged();
         }
@@ -221,8 +232,42 @@
         nav.NavigateTo("/ticket");
     }
 
+    private async Task CloseTicket()
+    {
+        statusDDL.selectedValue = Constants.STATUS_CLOSED;
+        await Update();
+    }
+
     private async Task Update()
     {
+        var request = new UpdateTicketRequest
+        {
+            TicketId = Ticket.TicketId,
+            ProductId = productDDL.selectedValue.ToNullableInteger(),
+            CategoryId = categoryDDL.selectedValue.ToNullableInteger(),
+            PriorityId = priorityDDL.selectedValue.ToNullableInteger(),
+            AssignedToId = assignDDL.selectedValue,
+            Status = statusDDL.selectedValue
+        };
 
+        ValidationHelpers validationHelper = new ValidationHelpers(request);
+        bool isValid = validationHelper.Validate();
+
+        errors = validationHelper.validationResults.Select(
+            x => x.ErrorMessage).ToArray();
+
+
+        if (isValid)
+        {
+            var result = await ticketService.UpdateTicket(request);
+            if (result.isSuccess)
+            {
+                alert.ShowAlerts("Successfully updated the ticket!");
+            }
+            else
+            {
+                alert.ShowFailed("Failed: " + result.ErrorMessage);
+            }
+        }
     }
 }

@@ -44,7 +44,7 @@ namespace Domain.Entities
 
 
         public string? ClosedBy { get; set; }
-        public DateTime? ClosedDate { get; set; }
+        public DateTime? ClosedByDate { get; set; }
         public DateTime? LastUpdatedDate { get; set; }
 
 

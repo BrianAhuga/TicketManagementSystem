@@ -45,6 +45,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 
 builder.Services.AddMudServices();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -60,6 +61,9 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
