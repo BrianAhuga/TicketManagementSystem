@@ -173,25 +173,30 @@
     {
         if (firstRender)
         {
-            productDDL.selectedValue = Ticket.ProductId.ToString();
-            priorityDDL.selectedValue = Ticket.PriorityId.ToString();
-            categoryDDL.selectedValue = Ticket.CategoryId.ToString();
-            statusDDL.selectedValue = Ticket.Status.ToString();
-
-            if (Ticket.ExpectedDate < DateTime.Now && Ticket.Status != Constants.STATUS_CLOSED)
-            {
-                alert.ShowFailed("This ticket is overdue!");
-            }
-
-            if (Ticket.AssignedToId != null)
-            {
-                assignDDL.selectedValue = Ticket.AssignedToId.ToString();
-            }
-
-            if (Ticket.Status == Constants.STATUS_CLOSED) isClosed = true;
-
-            StateHasChanged();
+            AssignTicketValue();
         }
+    }
+
+    private void AssignTicketValue()
+    {
+        productDDL.selectedValue = Ticket.ProductId.ToString();
+        priorityDDL.selectedValue = Ticket.PriorityId.ToString();
+        categoryDDL.selectedValue = Ticket.CategoryId.ToString();
+        statusDDL.selectedValue = Ticket.Status.ToString();
+
+        if (Ticket.ExpectedDate < DateTime.Now && Ticket.Status != Constants.STATUS_CLOSED)
+        {
+            alert.ShowFailed("This ticket is overdue!");
+        }
+
+        if (Ticket.AssignedToId != null)
+        {
+            assignDDL.selectedValue = Ticket.AssignedToId.ToString();
+        }
+
+        if (Ticket.Status == Constants.STATUS_CLOSED) isClosed = true;
+
+        StateHasChanged();
     }
 
     private void InitializeDropdown()
@@ -263,6 +268,8 @@
             if (result.isSuccess)
             {
                 alert.ShowAlerts("Successfully updated the ticket!");
+                Ticket = ticketService.FindTicket(ticketId);
+                AssignTicketValue();
             }
             else
             {

@@ -47,6 +47,13 @@ builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();
 
+// Browser error handler
+//builder.Services.AddServerSideBlazor(options =>
+//{
+//    options.DetailedErrors = true; // Enable this to see the real error in the browser console
+//});
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
