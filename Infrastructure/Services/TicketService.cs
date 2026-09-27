@@ -31,6 +31,7 @@ namespace Infrastructure.Services
             this.webHostEnvironment = webHostEnvironment;
         }
 
+
         public async Task<BaseResponse<int>> CreateTicket(CreateTicketRequest request)
         {
             var createTicketResult = new BaseResponse<int>() { isSuccess = false };
@@ -214,6 +215,21 @@ namespace Infrastructure.Services
             }
 
             return result;
+        }
+
+        public List<ChartResponse> Last12MonthsTickets()
+        {
+            return unitOfWork.TicketRepository.Last12MonthsTickets();
+        }
+
+        public List<ChartResponse> ChartByCategory(string category)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<ChartResponse> GetSummary()
+        {
+            throw new NotImplementedException();
         }
     }
 }

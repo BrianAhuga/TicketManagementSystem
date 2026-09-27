@@ -2,7 +2,7 @@
 @using MudBlazor
 @inherits LayoutComponentBase
 
-<MudThemeProvider />
+<MudThemeProvider Theme="myCustomTheme" />
 
 <div class="page">
     <div class="sidebar">
@@ -32,3 +32,16 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+
+@code {
+    MudTheme myCustomTheme = new MudTheme
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#007D88",
+            Info = "#64748b",
+            Error = "#dc3545"
+        }
+    };
+}

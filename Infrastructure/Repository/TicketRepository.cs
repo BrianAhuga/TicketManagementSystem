@@ -1,4 +1,5 @@
 ﻿using Domain.DTO.Request;
+using Domain.DTO.Response;
 using Domain.Entities;
 using Domain.Repository;
 using Infrastructure.Data;
@@ -55,7 +56,37 @@ namespace Infrastructure.Repository
                 query = query.Where(x => request.RaisedBy.Contains(x.RaisedBy));
             }
 
-            return query.OrderByDescending(x=>x.RaisedDate).ToList();
+            return query.OrderByDescending(x => x.RaisedDate).ToList();
+        }
+
+        public List<ChartResponse> Last12MonthsTickets()
+        {
+            var startMonthh = DateTime.Now.AddMonths(-36);
+
+            var query = dbContext.Set<Ticket>().Where(x => x.RaisedDate >= startMonthh)
+                .GroupBy(x => new { x.RaisedDate.Month, x.RaisedDate.Year })
+                .Select(g => new
+                {
+                    g.Key.Month,
+                    g.Key.Year,
+                    Count = g.Count(),
+                }).OrderBy(x => x.Year).ThenBy(x => x.Month).ToList();
+
+            return query.Select(x => new ChartResponse
+            {
+                Label = new DateTime(x.Year, x.Month, 1).ToString("MMM yyyy"),
+                Value = x.Count
+            }).ToList();
+        }
+
+        public List<ChartResponse> ChartByCategory(string category)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<ChartResponse> GetSummary()
+        {
+            throw new NotImplementedException();
         }
     }
 }
