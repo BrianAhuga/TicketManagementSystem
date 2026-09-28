@@ -21,5 +21,7 @@ namespace Infrastructure.Common
                 {ROLE_ADMIN_ID, ROLE_ADMIN },
                 {ROLE_USER_ID, ROLE_USER }
         };
+
+        public const string DEFAULT_AVATAR = "avatar.png";
     }
 }

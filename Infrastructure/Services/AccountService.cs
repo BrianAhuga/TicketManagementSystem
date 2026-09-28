@@ -6,6 +6,7 @@ using Domain.Interfaces;
 using Domain.Repository;
 using Infrastructure.Common;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
@@ -17,14 +18,17 @@ namespace Infrastructure.Services
         private readonly SignInManager<User> signInManager;
         private readonly IUnitOfWork unitOfWork;
         private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly IWebHostEnvironment webHostEnvironment;
 
         public AccountService(SignInManager<User> signInManager,
             IUnitOfWork unitOfWork,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IWebHostEnvironment webHostEnvironment)
         {
             this.signInManager = signInManager;
             this.unitOfWork = unitOfWork;
             this.httpContextAccessor = httpContextAccessor;
+            this.webHostEnvironment = webHostEnvironment;
         }
 
         public List<GetUserResponse> GetUsers()
@@ -62,11 +66,23 @@ namespace Infrastructure.Services
 
             var result = await signInManager.UserManager.CreateAsync(user, password);
 
-            return new BaseResponse
+            if (result.Succeeded)
             {
-                isSuccess = result.Succeeded,
-                ErrorMessage = result.Succeeded ? string.Empty : string.Join(", ", result.Errors.Select(e => e.Description))
-            };
+                await signInManager.UserManager.AddToRoleAsync(user, request.Role);
+
+                return new BaseResponse
+                {
+                    isSuccess = true
+                };
+            }
+            else
+            {
+                return new BaseResponse
+                {
+                    isSuccess = false,
+                    ErrorMessage = result.Errors.FirstOrDefault()?.Description
+                };
+            }
         }
 
         public async Task<BaseResponse<string>> VerifyUser(string email, string password)
@@ -74,7 +90,7 @@ namespace Infrastructure.Services
             BaseResponse<string> response = new();
 
             var user = await signInManager.UserManager.FindByEmailAsync(email);
-            if (user is null)
+            if (user is null || user.IsDeleted)
             {
                 response.ErrorMessage = "User not found";
                 response.isSuccess = false;
@@ -123,9 +139,30 @@ namespace Infrastructure.Services
             return response;
         }
 
-        public Task<BaseResponse> RemoveUser(string email)
+        public async Task<BaseResponse> RemoveUser(string email)
         {
-            throw new NotImplementedException();
+            BaseResponse response = new BaseResponse();
+            response.isSuccess = false;
+
+            var user = await signInManager.UserManager
+                .FindByEmailAsync(email);
+            if (user == null)
+            {
+                response.ErrorMessage = "User not found! - " + email;
+                return response;
+            }
+
+            user.IsDeleted = true;
+
+            var result = await signInManager.UserManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                response.ErrorMessage = result.Errors.FirstOrDefault().Description;
+                return response;
+            }
+
+            response.isSuccess = true;
+            return response;
         }
 
         public async Task<BaseResponse> ChangePassword(ChangePasswordRequest request)
@@ -171,14 +208,108 @@ namespace Infrastructure.Services
             }
         }
 
-        public Task<BaseResponse> ResetAvatar()
+        public async Task<BaseResponse> ResetAvatar()
         {
-            throw new NotImplementedException();
+            BaseResponse response = new BaseResponse();
+            response.isSuccess = false;
+            var uploadPath = Path
+                .Combine(webHostEnvironment.WebRootPath, "uploads", "avatar");
+
+            var currentUser = await GetCurrentUser();
+            if (!currentUser.isSuccess)
+            {
+                response.ErrorMessage = currentUser.ErrorMessage;
+                return response;
+            }
+
+            string previousAvatar;
+
+            if (currentUser.Value.Avatar != Constants.DEFAULT_AVATAR)
+            {
+                previousAvatar = currentUser.Value.Avatar;
+                previousAvatar = Path.Combine(uploadPath, previousAvatar);
+                if (File.Exists(previousAvatar))
+                {
+                    File.Delete(previousAvatar);
+                }
+
+                currentUser.Value.Avatar = Constants.DEFAULT_AVATAR;
+
+                var updateResult = await signInManager.UserManager
+                       .UpdateAsync(currentUser.Value);
+                if (updateResult.Succeeded)
+                {
+                    response.isSuccess = true;
+                }
+                else
+                {
+                    response.ErrorMessage = updateResult.Errors
+                        .FirstOrDefault().Description;
+                }
+            }
+
+            return response;
         }
 
-        public Task<BaseResponse<string>> UploadAvatar(IBrowserFile image)
+        public async Task<BaseResponse<string>> UploadAvatar(IBrowserFile image)
         {
-            throw new NotImplementedException();
+            BaseResponse<string> response = new BaseResponse<string>();
+            response.isSuccess = false;
+            string previousAvatar;
+            var uploadPath = Path
+                .Combine(webHostEnvironment.WebRootPath, "uploads", "avatar");
+
+            var currentUser = await GetCurrentUser();
+            if (!currentUser.isSuccess)
+            {
+                response.ErrorMessage = currentUser.ErrorMessage;
+                return response;
+            }
+
+            if (image != null)
+            {
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                if (currentUser.Value.Avatar != Constants.DEFAULT_AVATAR)
+                {
+                    previousAvatar = currentUser.Value.Avatar;
+                    previousAvatar = Path.Combine(uploadPath, previousAvatar);
+                    if (File.Exists(previousAvatar))
+                    {
+                        File.Delete(previousAvatar);
+                    }
+                }
+
+                var fileExtension = Path.GetExtension(image.Name);
+
+                string fileName = $"{currentUser.Value.Email}{fileExtension}";
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await image.OpenReadStream().CopyToAsync(fileStream);
+                }
+
+                currentUser.Value.Avatar = fileName;
+
+                var updateResult = await signInManager.UserManager
+                    .UpdateAsync(currentUser.Value);
+                if (updateResult.Succeeded)
+                {
+                    response.isSuccess = true;
+                    response.Value = fileName;
+                }
+                else
+                {
+                    response.ErrorMessage = updateResult.Errors
+                        .FirstOrDefault().Description;
+                }
+            }
+
+            return response;
         }
     }
 }
