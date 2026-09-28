@@ -61,7 +61,7 @@ namespace Infrastructure.Repository
 
         public List<ChartResponse> Last12MonthsTickets()
         {
-            var startMonthh = DateTime.Now.AddMonths(-36);
+            var startMonthh = DateTime.Now.AddMonths(-12);
 
             var query = dbContext.Set<Ticket>().Where(x => x.RaisedDate >= startMonthh)
                 .GroupBy(x => new { x.RaisedDate.Month, x.RaisedDate.Year })
@@ -112,7 +112,12 @@ namespace Infrastructure.Repository
 
         public List<ChartResponse> GetSummary()
         {
-            throw new NotImplementedException();
+            return dbContext.Set<Ticket>().GroupBy(x => x.Status)
+                .Select(g => new ChartResponse
+                {
+                    Label = g.Key,
+                    Value = g.Count()
+                }).ToList();
         }
     }
 }

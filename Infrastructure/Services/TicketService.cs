@@ -229,7 +229,7 @@ namespace Infrastructure.Services
 
         public List<ChartResponse> GetSummary()
         {
-            throw new NotImplementedException();
+            return unitOfWork.TicketRepository.GetSummary();
         }
     }
 }

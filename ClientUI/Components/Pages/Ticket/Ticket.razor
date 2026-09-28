@@ -1,8 +1,7 @@
 ﻿@page "/ticket"
 @using Domain.DTO.Request
-
-
-<SectionContent SectionName="page-title">Ticket Management</SectionContent>
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 
 @rendermode InteractiveServer
 
@@ -38,6 +37,8 @@
         padding-bottom: .3rem;
     }
 </style>
+
+<SectionContent SectionName="page-title">Ticket Management</SectionContent>
 
 <div class="filter-panel">
     <MudGrid>
@@ -106,6 +107,9 @@
 </MudDataGrid>
 
 @code {
+    [SupplyParameterFromQuery]
+    public string? filterStatus { get; set; }
+
     MudDataGrid<GetTicketResponse> dataGrid;
 
     MultiSelect productDDL;
@@ -163,6 +167,13 @@
 
     private async Task<GridData<GetTicketResponse>> ServerReload(GridState<GetTicketResponse> state)
     {
+        if (filterStatus!=null)
+        {
+            statusDDL.options = new string[] { filterStatus };
+            filterStatus = null;
+            StateHasChanged();
+        }
+
         IEnumerable<GetTicketResponse> getTickets = ticketService.GetTickets
         (
           new GetTicketRequest()
