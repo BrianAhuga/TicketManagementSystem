@@ -104,16 +104,21 @@
             <div class="dashboard-status">
                 <div class="header">
                     <div class="title">
-                        @* MudSelect Here *@
+                        <Select @ref="categoryTypeDDL"
+                                Clearable="false"
+                                elements="categoryType"
+                                OnSelectChangedParent="HandleCategoryChartChange">
+                        </Select>
                     </div>
                     <div style="clear: both;"></div>
                 </div>
                 <div class="body">
-                    @* Chart Here *@
+                    <MudChart ChartType="ChartType.Pie"
+                              InputData="@chartByCategoryValue"
+                              InputLabels="@chartByCategoryLabel">
+                    </MudChart>
                 </div>
             </div>
-
-
         </div>
     </div>
 </div>
@@ -123,6 +128,13 @@
     private List<ChartSeries> Last12MonthSeries = new List<ChartSeries>();
     private ChartOptions Last12MonthOptions = new ChartOptions();
     private string[] Last12MonthLabels;
+
+    private List<ChartResponse> chartByCategory;
+    Select categoryTypeDDL;
+    private List<SelectItem> categoryType;
+
+    double[] chartByCategoryValue = { };
+    string[] chartByCategoryLabel = { };
 
 
     protected override void OnInitialized()
@@ -137,5 +149,34 @@
 
         Last12MonthOptions.YAxisTicks = 5;
         Last12MonthLabels = Last12MonthTickets.Select(x => x.Label).ToArray();
+
+        categoryType = new List<SelectItem>
+        {
+            new SelectItem { Value = "Category", Text = "Category" },
+            new SelectItem { Value = "Product", Text = "Product" },
+            new SelectItem { Value = "Priority", Text = "Priority" },
+        };
+
+        chartByCategory = ticketService.ChartByCategory("Category");
+        chartByCategoryValue = chartByCategory.Select(x => (double)x.Value).ToArray();
+        chartByCategoryLabel = chartByCategory.Select(x => x.Label).ToArray();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (categoryTypeDDL.selectedValue == null)
+                categoryTypeDDL.selectedValue = "Category";
+
+            StateHasChanged();
+        }
+    }
+
+    private void HandleCategoryChartChange(string value)
+    {
+        chartByCategory = ticketService.ChartByCategory(value);
+        chartByCategoryValue = chartByCategory.Select(x => (double)x.Value).ToArray();
+        chartByCategoryLabel = chartByCategory.Select(x => x.Label).ToArray();
     }
 }

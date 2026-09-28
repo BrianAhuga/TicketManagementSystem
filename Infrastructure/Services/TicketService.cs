@@ -224,7 +224,7 @@ namespace Infrastructure.Services
 
         public List<ChartResponse> ChartByCategory(string category)
         {
-            throw new NotImplementedException();
+            return unitOfWork.TicketRepository.ChartByCategory(category);
         }
 
         public List<ChartResponse> GetSummary()
