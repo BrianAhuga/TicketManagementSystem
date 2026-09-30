@@ -653,7 +653,7 @@ Please keep changes focused, follow the existing layering (contracts in **Domain
 
 ## 📄 License
 
-No license has been specified yet. 
+This project is intended for learning, experimentation, and portfolio demonstration.
 
 ---
 
