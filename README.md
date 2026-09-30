@@ -653,7 +653,7 @@ Please keep changes focused, follow the existing layering (contracts in **Domain
 
 ## 📄 License
 
-No license has been specified yet. Add a `LICENSE` file (for example, [MIT](https://choosealicense.com/licenses/mit/)) and update this section accordingly.
+No license has been specified yet. 
 
 ---
 
