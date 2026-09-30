@@ -117,11 +117,9 @@ namespace Infrastructure.Services
 
         public GetTicketResponse FindTicket(int ticketId)
         {
-            var result = unitOfWork.Repository<Ticket>().GetByIdAsync(ticketId);
+            var result = unitOfWork.TicketRepository.FindTicket(ticketId);
             if (result == null) return null;
 
-            var attachments = unitOfWork.Repository<Attachment>().ListAll()
-                .Where(x => x.TicketId == result.TicketId);
             var attachmentpath = Path.Combine("uploads", "attachments");
 
             return new GetTicketResponse
@@ -136,12 +134,13 @@ namespace Infrastructure.Services
                 AssignedToId = result.AssignedToId,
                 RaisedBy = result.User?.Id,
                 RaisedByName = result.User?.Email,
+                RaisedByAvatar = result.User?.Avatar,
                 CreatedDate = result.RaisedDate,
                 ExpectedDate = result.ExpectedDate,
                 ClosedBy = result.ClosedBy,
                 ClosedByDate = result.ClosedByDate,
 
-                Attachments = attachments.Select(x => new AttachmentResponse
+                Attachments = result.Attachments.Select(x => new AttachmentResponse
                 {
                     FileName = x.FileName,
                     ServerFileName = Path.Combine(attachmentpath, x.ServerFileName)

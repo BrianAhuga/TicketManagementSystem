@@ -40,10 +40,12 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ICriteriaService, CriteriaService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<IDiscussionService, DiscussionService>();
 
 builder.Services.AddScoped(typeof(EncryptionHelper<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+builder.Services.AddScoped<IDiscussionRepository, DiscussionRepository>();
 
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();

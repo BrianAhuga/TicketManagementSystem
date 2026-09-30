@@ -35,6 +35,7 @@
         public DateTime? ClosedByDate { get; set; }
 
         public List<AttachmentResponse> Attachments { get; set; }
+        public string? RaisedByAvatar { get; set; }
     }
 }
 

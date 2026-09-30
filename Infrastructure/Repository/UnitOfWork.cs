@@ -10,12 +10,15 @@ namespace Infrastructure.Repository
         private readonly AppDBContext context;
         private Hashtable repositories;
         public ITicketRepository TicketRepository { get; }
+        public IDiscussionRepository DiscussionRepository { get; }
 
         public UnitOfWork(AppDBContext context,
-            ITicketRepository ticketRepository)
+            ITicketRepository ticketRepository,
+            IDiscussionRepository discussionRepository)
         {
             this.context = context;
             TicketRepository = ticketRepository;
+            DiscussionRepository = discussionRepository;
         }
 
         public async Task<int> SaveChanges()

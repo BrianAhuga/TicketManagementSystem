@@ -113,10 +113,11 @@
         var user = await signInManager.UserManager.FindByEmailAsync(verify.Value);
         await protectedSessionStorage.SetAsync("avatar", user.Avatar);
         await protectedSessionStorage.SetAsync("email", user.Email);
+        await protectedSessionStorage.SetAsync("accountConfirmed", user.AccountConfirmed);
 
         var payload = encrypt.Encode(loginData);
 
-        nav.NavigateTo($"/processor/{payload}");
+        nav.NavigateTo($"/processor?payload={payload}", true);
     }
 
     private sealed class InputModel

@@ -1,4 +1,4 @@
-﻿@page "/processor/{payload}"
+﻿@page "/processor"
 
 @layout EmptyLayout
 
@@ -12,7 +12,7 @@
 Sign In...
 
 @code {
-    [Parameter] public string payload { get; set; }
+    [SupplyParameterFromQuery] public string payload { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -31,7 +31,7 @@ Sign In...
             }
             else
             {
-                nav.NavigateTo("/changepassword?required=true", true);
+                nav.NavigateTo("/changepassword");
             }
         }
     }

@@ -3,12 +3,14 @@
 @using Domain.DTO.Request
 @using Infrastructure.Common
 @using Microsoft.AspNetCore.Authorization
+@using ClientUI.Components.Pages.Ticket.Discussion
 @attribute [Authorize]
 
 @inject ITicketService ticketService
 @inject IAccountService accountService
 @inject ICriteriaService criteriaService
 @inject NavigationManager nav
+@inject IDiscussionService discussionService
 
 @rendermode InteractiveServer
 
@@ -51,7 +53,7 @@
                 <table class="mt-2">
                     <tr>
                         <td rowspan="2">
-                            <MudImage Src="uploads/avatar/avatar.png"
+                            <MudImage Src="@Path.Combine("uploads", "avatars", Ticket.RaisedByAvatar ?? Constants.DEFAULT_AVATAR)"
                                       Width="50" Height="50" Style="border-radius:5px" />
                         </td>
                         <td>
@@ -73,7 +75,7 @@
                     @((MarkupString)Ticket.Description)
                 </div>
 
-                @if(Ticket.Attachments.Count > 0)
+                @if (Ticket.Attachments.Count > 0)
                 {
                     <div class="attachment mt-5">
                         <div>
@@ -85,7 +87,7 @@
                                 {
                                     <MudItem>
                                         <MudButton Download="@item.FileName"
-                                                    Href="@item.ServerFileName"
+                                                   Href="@item.ServerFileName"
                                                    Variant="Variant.Outlined"
                                                    StartIcon="@Icons.Material.Filled.CloudDownload"
                                                    Color="Color.Primary">
@@ -96,8 +98,14 @@
                             </MudGrid>
                         </div>
                     </div>
-                } 
+                }
             </div>
+
+            <hr />
+
+            <CreateDiscussion TicketId="ticketId" OnNotifyParent="RefreshDiscussion" />
+            <hr />
+            <ViewDiscussions Discussions="discussions" />
         </div>
         <div class="col-sm-2 action-panel">
             <MudStack Style="width: 100%" class="mt-5">
@@ -155,6 +163,8 @@
     private List<SelectItem> status;
     private List<SelectItem> users;
 
+    private List<DiscussionResponse> discussions;
+
     private bool isClosed = false;
     private Alert alert;
     private string[] errors = { };
@@ -164,7 +174,15 @@
         Ticket = ticketService.FindTicket(ticketId);
         InitializeDropdown();
 
+        discussions = discussionService.GetDiscussions(ticketId);
+
         return Task.CompletedTask;
+    }
+
+    private void RefreshDiscussion()
+    {
+        discussions = discussionService.GetDiscussions(ticketId);
+        StateHasChanged();
     }
 
     protected override void OnAfterRender(bool firstRender)

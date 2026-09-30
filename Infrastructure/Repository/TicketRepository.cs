@@ -119,5 +119,13 @@ namespace Infrastructure.Repository
                     Value = g.Count()
                 }).ToList();
         }
+
+        public Ticket FindTicket(int ticketId)
+        {
+            return dbContext.Set<Ticket>()
+                .Include(x => x.User)
+                .Include(x => x.Attachments)
+                .FirstOrDefault(x => x.TicketId == ticketId);
+        }
     }
 }
