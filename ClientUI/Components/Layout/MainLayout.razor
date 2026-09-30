@@ -3,7 +3,7 @@
 @inherits LayoutComponentBase
 
 <MudThemeProvider Theme="myCustomTheme" />
-<MudPopoverProvider @rendermode="InteractiveServer"/>
+<MudPopoverProvider @rendermode="InteractiveServer" />
 <MudDialogProvider @rendermode="InteractiveServer" />
 <MudSnackbarProvider @rendermode="InteractiveServer" />
 
@@ -20,7 +20,7 @@
 
 
             <AuthorizeView>
-                <a href="/logout">Logout</a>
+                <AccountPanel />
             </AuthorizeView>
         </div>
 
