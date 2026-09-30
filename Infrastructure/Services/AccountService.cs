@@ -227,10 +227,13 @@ namespace Infrastructure.Services
             if (currentUser.Value.Avatar != Constants.DEFAULT_AVATAR)
             {
                 previousAvatar = currentUser.Value.Avatar;
-                previousAvatar = Path.Combine(uploadPath, previousAvatar);
-                if (File.Exists(previousAvatar))
+                if (!string.IsNullOrEmpty(previousAvatar))
                 {
-                    File.Delete(previousAvatar);
+                    previousAvatar = Path.Combine(uploadPath, previousAvatar);
+                    if (File.Exists(previousAvatar))
+                    {
+                        File.Delete(previousAvatar);
+                    }
                 }
 
                 currentUser.Value.Avatar = Constants.DEFAULT_AVATAR;
@@ -257,7 +260,7 @@ namespace Infrastructure.Services
             response.isSuccess = false;
             string previousAvatar;
             var uploadPath = Path
-                .Combine(webHostEnvironment.WebRootPath, "uploads", "avatar");
+                .Combine(webHostEnvironment.WebRootPath, "uploads", "avatars");
 
             var currentUser = await GetCurrentUser();
             if (!currentUser.isSuccess)
@@ -273,7 +276,8 @@ namespace Infrastructure.Services
                     Directory.CreateDirectory(uploadPath);
                 }
 
-                if (currentUser.Value.Avatar != Constants.DEFAULT_AVATAR)
+                if (currentUser.Value.Avatar != null &&
+                    currentUser.Value.Avatar != Constants.DEFAULT_AVATAR)
                 {
                     previousAvatar = currentUser.Value.Avatar;
                     previousAvatar = Path.Combine(uploadPath, previousAvatar);

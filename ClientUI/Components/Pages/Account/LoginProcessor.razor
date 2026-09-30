@@ -18,8 +18,21 @@ Sign In...
     {
         var loginDTO = encrypt.Decode(payload);
 
-        await signInManager.PasswordSignInAsync(loginDTO.Username, loginDTO.Password,
-            loginDTO.RememberMe, false);
-        nav.NavigateTo("/");
+        var user = await signInManager.UserManager.FindByEmailAsync(loginDTO.Username);
+
+        var result = await signInManager.PasswordSignInAsync(loginDTO.Username,
+            loginDTO.Password, loginDTO.RememberMe, false);
+
+        if (result.Succeeded)
+        {
+            if (user.AccountConfirmed)
+            {
+                nav.NavigateTo("/");
+            }
+            else
+            {
+                nav.NavigateTo("/changepassword?required=true", true);
+            }
+        }
     }
 }
